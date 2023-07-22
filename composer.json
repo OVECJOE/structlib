@@ -1,19 +1,29 @@
 {
-    "name": "rndoom04/example",
-    "description": "A example-template library for PHP.",
+    "name": "peoticman/structlib",
+    "description": "A PHP library with additional data structures and methods",
+    "type": "library",
+    "require": {
+        "phpunit/phpunit": "10.3.x-dev",
+        "monolog/monolog": "3.x-dev",
+        "nesbot/carbon": "3.x-dev",
+        "ramsey/uuid": "5.x-dev",
+        "guzzlehttp/guzzle": "7.7.x-dev",
+        "jms/serializer": "3.x-dev",
+        "league/flysystem": "3.x-dev"
+    },
     "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Structlib\\": "src/"
+        }
+    },
     "authors": [
         {
-            "name": "Slavomí­r Kollert",
-            "email": "info@kollertslavomir.cz"
+            "name": "OVECJOE",
+            "email": "ovecjoe123@gmail.com",
+            "homepage": "https://mainstack.me/ovecjoe",
+            "role": "owner"
         }
     ],
-    "require": {
-            "php": ">=7.0"
-    },
-    "autoload": {
-        "files": [ "src/example.php" ]
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    "minimum-stability": "dev"
 }
