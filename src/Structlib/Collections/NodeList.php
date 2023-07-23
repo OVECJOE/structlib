@@ -2,7 +2,7 @@
 
 /**
  *  @author OVECJOE <ovecjoe123@gmail.com>
- *  @file Node.php: Represents the node of any data structure
+ *  @file NodeList.php: Represents the node of any data structure
  *  @declare(strict_types=1);
  */
 
