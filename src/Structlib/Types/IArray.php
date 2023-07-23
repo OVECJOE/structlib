@@ -9,9 +9,9 @@
 
 namespace Structlib\Types;
 
-use Structlib\Types\Abstracts\AAbstract;
+use Structlib\Types\Base\BArray;
 
-class IArray extends AAbstract
+class IArray extends BArray
 {
     public function __construct( $max_length, ...$items )
     {

@@ -2,14 +2,14 @@
 
 /**
  * @author OVECJOE <ovecjoe123@gmail.com>
- * @file AAbstract.php: Implements an abstract class for arrays
+ * @file BArray.php: Implements an abstract class for arrays
  * 
  * @declare(strict_types=1);
  */
 
-namespace Structlib\Types\Abstracts;
+namespace Structlib\Types\Base;
 
-class AAbstract {
+class BArray {
     /**
      *  @var array
      *  @access private
