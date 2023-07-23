@@ -196,15 +196,15 @@ class IArray extends AAbstract
      */
     public function filter( $callback )
     {
-        $filteredArrays = [];
+        $filteredArray = [];
 
         foreach ( $this->items as $item ) {
             if ( $callback($item) ) {
-                $filteredArrays[] = $item;
+                $filteredArray[] = $item;
             }
         }
 
-        return $filteredArrays;
+        return $filteredArray;
     }
 
     /**

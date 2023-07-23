@@ -255,4 +255,47 @@ class AArray extends AAbstract
     {
         return new AArray( $this->items, $this->max_length );
     }
+
+    /**
+     *  Filter the current array and return the filtered array
+     * 
+     *  @param callable $callback
+     * 
+     *  @return array the filtered array
+     */
+    public function filter( $callback ) {
+        $filtered = [];
+
+        if ( ! is_callable( $callback ) ) {
+            throw new \InvalidArgumentException( 'Callback must be a callable' );
+        }
+
+        // check that the number of arguments expected from the callback is 2 (key, value)
+        $funcReflection = new \ReflectionFunction( $callback );
+        $numArgs = $funcReflection->getNumberOfParameters();
+
+        if ( $numArgs != 2 ) {
+            throw new \InvalidArgumentException( "Invalid number of arguments. Expected: 2, Got: $numArgs" );
+        }
+
+        foreach ( $this->items as $key => $value ) {
+            if ( $callback( $key, $value ) ) {
+                $filtered[$key] = $value;
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     *  Split $this->items into chunks of $length size.
+     * 
+     *  @param int $length the length of each chunk
+     * 
+     *  @return array an array of chunks of $length sizes (a multi-dimensional array)
+     */
+    public function chunk( $length )
+    {
+        return array_chunk( $this->items, $length, true );
+    }
 }
