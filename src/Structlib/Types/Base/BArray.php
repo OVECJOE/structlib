@@ -9,7 +9,7 @@
 
 namespace Structlib\Types\Base;
 
-class BArray {
+class BArray implements \IteratorAggregate {
     /**
      *  @var array
      *  @access private
@@ -43,6 +43,11 @@ class BArray {
         }
 
         throw new \OutOfBoundsException("Property '$name' does not exist");
+    }
+
+    public function getIterator(): \ArrayIterator
+    {
+        return new \ArrayIterator( $this->items );
     }
 
     /**

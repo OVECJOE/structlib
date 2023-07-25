@@ -356,6 +356,20 @@ class IArray extends BArray
     }
 
     /**
+     *  Slice the array of items from a given position and return the result.
+     * 
+     *  @param int $start The starting position of the slicing operation
+     *  @param int $end The ending position of the slicing operation
+     * 
+     *  @return array An array of items from a given start position to the end position
+     */
+    public function slice( $start, $end )
+    {
+        $length = $end - $start;
+        return array_slice( $this->items, $start, $length );
+    }
+
+    /**
      *  Converts the array into an associative array
      * 
      *  @param int $depth the depth of the conversion process (if there are nested arrays)

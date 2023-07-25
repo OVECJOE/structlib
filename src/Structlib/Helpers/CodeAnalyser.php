@@ -17,6 +17,7 @@ class CodeAnalyser
     private $methodAnalyser;
 
     private $analysers = [ 'funcAnalyser', 'classAnalyser', 'methodAnalyser' ];
+    private $currentER; // most current execution result
 
     private function __construct() {}
 
@@ -73,6 +74,22 @@ class CodeAnalyser
     }
 
     /**
+     *  Get the active analyser.
+     * 
+     *  @return \ReflectionFunction|\ReflectionMethod|\ReflectionClass|null
+     */
+    public function getActiveAnalyser(): mixed
+    {
+        foreach ( $this->analysers as $analyser ) {
+            if ( $this->$analyser ) {
+                return $this->$analyser;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      *  Get a method from the active analyser using the method name
      * 
      *  @param string $name
@@ -81,6 +98,8 @@ class CodeAnalyser
      */
     private function get( string $name )
     {
+        if ( ! $name ) return null;
+
         foreach ( $this->analysers as $analyser ) {
             if ( $this->$analyser && method_exists( $this->$analyser, $name ) ) {
                 return $this->$analyser->$name;
@@ -193,5 +212,212 @@ class CodeAnalyser
     {
         $is_abstract = $this->get( 'isAbstract' );
         return is_callable( $is_abstract ) && $is_abstract();
+    }
+
+    /**
+     *  Check if the function, method, or class is final.
+     * 
+     *  @return bool true if the function, method, or class is final, false otherwise
+     */
+    public function isFinal(): bool
+    {
+        $is_final = $this->get( 'isFinal' );
+        return is_callable( $is_final ) && $is_final();
+    }
+
+    /**
+     *  Checks if the function or method is deprecated
+     * 
+     *  @return bool true if the function or method is deprecated, false otherwise
+     */
+    public function isDeprecated(): bool
+    {
+        $is_deprecated = $this->get( 'isDeprecated' );
+        return is_callable( $is_deprecated ) && $is_deprecated();
+    }
+
+    /**
+     *  Get information about the parameters of the function, method, or class constructor
+     * 
+     *  @return array[] An array of associative arrays of parameters information
+     */
+    public function getParamsInfo(): array
+    {
+        if ( $this->classAnalyser ) {
+            // get the parameters of the class constructor
+            $params = $this->classAnalyser->getConstructor()->getParameters();
+        } else {
+            $params = $this->get( 'getParameters' )();
+        }
+
+        return array_map( function ( $param ) {
+            return [
+                'name' => $param->getName(),
+                'type' => $param->getType(),
+                'pos' => $param->getPosition(),
+                'default' => $param->getDefaultValue(),
+            ];
+        }, $params );
+    }
+
+    /**
+     *  Get the visibility of a function, method, or class.
+     */
+    public function getVisibility(): string
+    {
+        if ( ! $this->funcAnalyser ) {
+            if ( $this->get( 'isProtected' ) ) {
+                return 'protected';
+            } else if ( $this->get( 'isPrivate' ) ) {
+                return 'private';
+            }
+        }
+
+        return 'public';
+    }
+
+    /**
+     *  Get traits used for a class instance
+     * 
+     *  @return array|null traits used by a class, or null if no traits
+     */
+    public function getTraits(): array|null
+    {
+        if ( $this->classAnalyser ) {
+            $traits = $this->classAnalyser->getTraits();
+
+            return array_map(function ($trait) {
+                return [
+                    'name' => $trait->getName(),
+                    'constants' => $trait->getConstants(),
+                    'methods' => $trait->getMethods(),
+                    'in_ns' => $trait->inNamespace(),
+                    'properties' => $trait->getProperties(),
+                    'file_name' => $trait->getFileName()
+                ];
+            }, $traits);
+        }
+
+        return null;
+    }
+
+    /**
+     *  Calculate cyclomatic complexity. 
+     * 
+     *  Cyclomatic complexity is calculated by counting the number of decision points
+     *  (branches) in the code, such as if statements, loops (for, while, do-while),
+     *  switch statements, and logical operators (&&, ||, ? :).
+     * 
+     *  @param int cyclomatic complexity of the method or function.
+     */
+    public function calculateCComp(): int
+    {
+        // get the number of lines of code
+        $lines = $this->getLines();
+
+        if ( ! empty( $lines ) ) {
+            // get file name
+            $fileName = $this->getFilePath();
+            // get the content of the file
+            $fileContent = file( $fileName );
+            
+            // get function/method code
+            $code = array_slice( $fileContent, $lines[0] - 1, $lines[1] - $lines[0] + 1 );
+            // convert $code to string
+            $code = implode( "\n", $code );
+
+            // tokenize the code
+            $tokens = token_get_all( "<?php\n" . $code . "\n" );
+            
+            // defaults to 1 signifying the function/method entry point
+            $complexity = 1;
+
+            $decisionPoints = [
+                T_IF, T_ELSEIF, T_ELSE, T_SWITCH,
+                T_CASE, T_DEFAULT, T_WHILE, T_DO,
+                T_FOR, T_FOREACH, T_CATCH, T_BOOLEAN_AND,
+                T_BOOLEAN_OR
+            ];
+
+            foreach ( $tokens as $token ) {
+                if ( is_array( $token ) && in_array( $token, $decisionPoints ) ) {
+                    $complexity++;
+                }
+            }
+
+            return $complexity;
+        }
+
+        return -1;
+    }
+
+    /** 
+     *  Execute the function, method, and class
+     * 
+     *  @param array $args the arguments to be passed to the function/method
+     *  @param object|null $instance the class instance if analyser is available for method or class
+     *  @param string $methodName the name of the method if analyser is available for class
+     * 
+     *  @return mixed the result of the execution of the function/method call
+     */
+    public function execute( array $args = [], object|null $instance, string $methodName = '' )
+    {
+        $analyser = $this->getActiveAnalyser();
+
+        if ( $analyser instanceof \ReflectionFunction ) {
+            return $analyser->invokeArgs( $args );
+        } else if ( $analyser instanceof \ReflectionMethod ) {
+            return $analyser->invokeArgs( $instance, $args );
+        } else if ( $analyser instanceof \ReflectionClass ) {
+            if ( method_exists( $instance, $methodName ) ) {
+                return $instance->$methodName( $args );
+            }
+        }
+    }
+
+    /**
+     *  Calculate the execution time of a class, method, or function
+     * 
+     *  @param object|null $instance class instance if class/method analyser is active
+     *  @param string methodName method name to execute if class analyser is active
+     *  @param array ...$args the arguments to pass to the function or method
+     * 
+     *  @return float in milliseconds
+     */
+    public function getExecutionTime( $instance = null, $methodName = '', ...$args )
+    {
+        // record the time before execution
+        $startTime = microtime( true );
+
+        // execute the function, method, or class
+        $this->currentER = $this->execute( $args, $instance, $methodName );
+
+        // record the time after execution
+        $endTime = microtime( true );
+
+        return ($endTime - $startTime) * 1e3;
+    }
+
+    /**
+     *  Get memory usage of the execution of the class, method, or function in bytes.
+     * 
+     *  @param object|null $instance class instance if class/method analyser is active
+     *  @param string methodName method name to execute if class analyser is active
+     *  @param array ...$args the arguments to pass to the function or method
+     * 
+     *  @return int memory used in bytes
+     */
+    public function getMemoryUsage( $instance = null, $methodName = '', ...$args )
+    {
+        // backup the current memory usage
+        $initialUsage = memory_get_usage();
+
+        // execute the function, method, or class
+        $this->currentER = $this->execute( $args, $instance, $methodName );
+
+        // get the memory usage after execution
+        $finalUsage = memory_get_usage();
+
+        return $finalUsage - $initialUsage;
     }
 }
