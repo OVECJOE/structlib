@@ -143,24 +143,23 @@ class IArray extends BArray
      *  Extend the array with a given array i.e. add the elements of the given array
      *  to the end of the array. It is the same as performing push operations multiple times
      * 
-     *  @param array $items the given array to extend $this->items by
+     *  @param array $other_arr the given array to extend $this->items by
      * 
-     *  @throws \InvalidArgumentException if $items is an associative array
+     *  @throws \InvalidArgumentException if $other_arr is an associative array
      * 
      *  @return array the extended array.
      */
-    public function extend( $items )
+    public function extend( $other_arr )
     {
-        if ( $this->isAssociative( $items ) ) {
-            throw new \InvalidArgumentException( '$items must be an indexed array' );
+        if ( $this->isAssociative( $other_arr ) ) {
+            throw new \InvalidArgumentException( '$other_arr must be an indexed array' );
         }
 
-        foreach ( $items as $item ) {
+        foreach ( $other_arr as $item ) {
             $this->push( $item );
-            $this->length++;
         }
 
-        return $this->$items;
+        return $this->items;
     }
 
     /**
@@ -168,23 +167,23 @@ class IArray extends BArray
      *  an instance of IndexedArray.
      * 
      *  @static
-     *  @param array ...$indexedArrays
+     *  @param array ...$indexed_arrs
      * 
      *  @return array a new array with all the elements of the arrays merged together
      */
-    public static function merge( ...$indexedArrays )
+    public static function merge( ...$indexed_arrs )
     {
-        $unmergedArrays = [];
+        $unmerged_arrs = [];
 
-        foreach ( $indexedArrays as $arr ) {
+        foreach ( $indexed_arrs as $arr ) {
             if ( ! $arr instanceof IArray ) {
                 throw new \InvalidArgumentException( '$indexedArray must be an array of IndexedArray instances' );
             }
 
-            $unmergedArrays[] = $arr->items;
+            $unmerged_arrs[] = $arr->items;
         }
 
-        return array_merge( ...$unmergedArrays );
+        return array_merge( ...$unmerged_arrs );
     }
 
     /**
@@ -196,15 +195,15 @@ class IArray extends BArray
      */
     public function filter( $callback )
     {
-        $filteredArray = [];
+        $filtered_arr = [];
 
         foreach ( $this->items as $item ) {
             if ( $callback($item) ) {
-                $filteredArray[] = $item;
+                $filtered_arr[] = $item;
             }
         }
 
-        return $filteredArray;
+        return $filtered_arr;
     }
 
     /**
@@ -386,15 +385,15 @@ class IArray extends BArray
                 break;
             }
 
-            [$current, $currentAArray] = array_pop( $stack );
+            [$current, $current_a_array] = array_pop( $stack );
 
             foreach ( $current as $item ) {
                 $key = uniqid();
 
                 if ( is_array( $item ) ) {
-                    $stack[] = [ $item, &$currentAArray[$key] ];
+                    $stack[] = [ $item, &$current_a_array[$key] ];
                 } else {
-                    $currentAArray[$key] = $item;
+                    $current_a_array[$key] = $item;
                 }
             }
 

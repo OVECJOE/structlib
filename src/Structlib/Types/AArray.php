@@ -95,7 +95,7 @@ class AArray extends BArray
         if ( ! $this->has( $key ) ) {
             // check that array is not full
             if ( $this->isFull() ) {
-                throw new \LengthException( '$this->items is already full' );
+                throw new \LengthException( 'Array is already full' );
             }
 
             $this->length++;
@@ -182,7 +182,7 @@ class AArray extends BArray
             if ( $clear ) {
                 // remove the item from the array
                 unset( $this->items[$key] );
-                // reduct the length of the array by 1
+                // reduce the length of the array by 1
                 $this->length--;
             }
         }
@@ -193,17 +193,17 @@ class AArray extends BArray
     /**
      *  Merge another array into the current array.
      * 
-     *  @param array $otherAArray
+     *  @param array $other_a_array
      * 
      *  @return void
      */
-    public function merge( $otherAArray )
+    public function merge( $other_a_array )
     {
-        if ( ! $otherAArray instanceof AArray ) {
-            throw new \InvalidArgumentException( '$otherAArray must be an instance of the AArray class' );
+        if ( ! $other_a_array instanceof AArray ) {
+            throw new \InvalidArgumentException( '$other_a_array must be an instance of the AArray class' );
         }
 
-        foreach ( $otherAArray as $key => $value ) {
+        foreach ( $other_a_array as $key => $value ) {
             if ( ! $this->isFull() || $this->has( $key ) ) {
                 $this->set( $key, $value );
             }
@@ -228,13 +228,13 @@ class AArray extends BArray
                 break;
             }
 
-            [$current, $currentIArray] = array_pop( $stack );
+            [$current, $current_i_array] = array_pop( $stack );
 
             foreach ( $current as $idx => $item ) {
                 if ( $this->isAssociative($item) ) {
-                    $stack[] = [ array_values($item), &$currentIArray[$idx] ];
+                    $stack[] = [ array_values($item), &$current_i_array[$idx] ];
                 } else {
-                    $currentIArray[$idx] = $item;
+                    $current_i_array[$idx] = $item;
                 }
             }
 
