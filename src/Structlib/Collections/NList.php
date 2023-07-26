@@ -261,7 +261,7 @@ class NList {
      * 
      *  @return mixed|Node The node at the given index or the default value if no node is found
      */
-    public function get( $index, $as_data = false, $default = null )
+    public function get( $index, $default = null, $as_data = false )
     {
         // reset the index if negative
         if ( $index < 0 ) {
@@ -598,5 +598,212 @@ class NList {
         }
 
         return $result;
+    }
+
+    /**
+     *  Maps a callback function to each node in the list
+     * 
+     *  @param callable $callback  callback function to execute on each node
+     * 
+     *  @return NList a new list of nodes where each node has been mapped to the callback function.
+     *  
+     *  If callback is not a function, returns the current list unchanged.
+     */
+    public function map( $callback )
+    {
+        $new_list = new NList();
+
+        if ( ! is_callable( $callback ) ) {
+            return $this;
+        }
+
+        $trav = $this->head;
+        while ( $trav ) {
+            $new_list->append( $callback( $trav->data ) );
+            $trav = $trav->next;
+        }
+
+        return $new_list;
+    }
+
+    /**
+     *  Create a new NList containing only the elements that pass a certain test defined by
+     *  the callback function.
+     * 
+     *  @param callable $callback
+     * 
+     *  @return NList a new list containing only the nodes that pass a certain test defined,
+     *  else empty list
+     */
+    public function filter( $callback )
+    {
+        $new_list = new NList();
+
+        $trav = $this->head;
+
+        if ( is_callable( $callback ) ) {
+            while ( $trav ) {
+                if ( $callback($trav) ) {
+                    $new_list->append( $trav->data );
+                }
+            }
+        }
+
+        return $new_list;
+    }
+
+    /**
+     *  Reduce the list to a single value using the callback function that accumulates values
+     *  successively.
+     * 
+     *  @param callable $callback The callback function to be called to reduce the list
+     *  @param mixed $initial The initial or default value to start with
+     * 
+     *  @return mixed The accumulated value from the reduction process
+     */
+    public function reduce( $callback, $initial = null )
+    {
+        $accumulator = $initial;
+        $trav = $this->head;
+
+        while ( $trav ) {
+            $accumulator = $callback( $accumulator, $trav->data );
+            $trav = $trav->next;
+        }
+
+        return $accumulator;
+    }
+
+    /**
+     *  Create an iterator object that can be used in loops to iterate over the list items
+     * 
+     *  @return \Generator
+     */
+    public function getIterator()
+    {
+        return $this->iterate();
+    }
+
+    /**
+     *  A generator function that traverses the list of elements and returns their data.
+     *  @access private
+     * 
+     * @return \Generator
+     */
+    private function iterate()
+    {
+        $trav = $this->head;
+
+        while ( $trav ) {
+            // yield the node's data
+            yield $trav->data;
+            // move to the next node
+            $trav = $trav->next;
+        }
+    }
+
+    /**
+     *  Extend the list with a given array of items (or list of nodes)
+     * 
+     *  @param array|NList $elements List of nodes or array of items to extend the list with
+     * 
+     *  @return NList the list extended.
+     */
+    public function extend( $elements, $prepend = false )
+    {
+        foreach ( $elements as $element ) {
+            if ( $prepend ) {
+                $this->prepend( $element );
+            } else {
+                $this->append( $element );
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     *  Create a new NList containing a portion of the original list,
+     *  starting from the given index and with an optional specified length.
+     * 
+     *  @param int $start The starting index of the slice
+     *  @param int $length The length of the new portion to slice
+     * 
+     *  @return NList A new NList containing the sliced portion 
+     */
+    public function slice($start, $length = -1)
+    {
+        $sliced_portion = new NList();
+    
+        // Get the node at the start position
+        $node = $this->get( $start );
+    
+        for ( $i = 0; $node && ($i < $length || $length === -1); $i++ ) {
+            $sliced_portion->append( $node->data );
+    
+            // Update node pointer
+            $node = $node->next;
+        }
+    
+        return $sliced_portion;
+    }
+
+    /**
+     *  Create a new NList containing only the unique elements from the original list.
+     * 
+     *  @return NList A new NList containing only the unique elements.
+     */
+    public function unique()
+    {
+        $unique_elements = [];
+        $new_list = new NList();
+
+        foreach ( $this as $node ) {
+            $data = $node->data;
+
+            if ( ! isset( $unique_elements[$data] ) ) {
+                $unique_elements[$data] = true;
+                $new_list->append($data);
+            }
+        }
+
+        return $new_list;
+    }
+
+    /**
+     *  Sort the elements in asc/desc order. Optionally, a custom comparator function can
+     *  be provided.
+     * 
+     *  @param callable|null $comparator=null Optional comparator function to use for sorting
+     *  @param bool $desc=false whether to sort by descending or ascending
+     * 
+     *  @return NList A current sorted list.
+     */
+    public function sort( $comparator = null, $desc = false )
+    {
+        // convert the list into a regular array for sorting
+        $elements = $this->toArray();
+
+        // Sort the array using the specified comparator or the default
+        if ( is_callable( $comparator ) ) {
+            usort( $elements, $comparator );
+        } else {
+            sort( $elements );
+        }
+
+        // Reverse the array if sorting is in descending order
+        if ( $desc ) {
+            $elements = array_reverse( $elements );
+        }
+
+        // reconstruct the sorted list from the sorted array
+        $this->clear(); // Clear the existing list
+
+        // Reconstruct the linked list from the sorted array
+        foreach ($elements as $element) {
+            $this->append($element);
+        }
+
+        return $this;
     }
 }
