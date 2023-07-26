@@ -38,25 +38,12 @@ class NList {
         }
     }
 
-    /**
-     *  Converts the nodes list into an array
-     * 
-     *  @return array an array representation of the nodes list
-     */
-    protected function toArray()
-    {
-        $items = [];
-
-        $trav = $this->head;
-        while ( $trav ) {
-            // add the node's data to the array
-            array_push( $items, $trav->data );
-
-            // move to the next node
-            $trav = $trav->next;
+    public function __get( $name ) {
+        if ( property_exists( $this, $name ) ) {
+            return $this->$name;
         }
 
-        return $items;
+        throw new \OutOfBoundsException("Property '$name' does not exist");
     }
 
     public function __debugInfo()
@@ -88,6 +75,27 @@ class NList {
         $output .= ")[{$this->length}]\n";
 
         return $output;
+    }
+
+    /**
+     *  Converts the nodes list into an array
+     * 
+     *  @return array an array representation of the nodes list
+     */
+    protected function toArray()
+    {
+        $items = [];
+
+        $trav = $this->head;
+        while ( $trav ) {
+            // add the node's data to the array
+            array_push( $items, $trav->data );
+
+            // move to the next node
+            $trav = $trav->next;
+        }
+
+        return $items;
     }
 
     /**
@@ -251,9 +259,9 @@ class NList {
      *  @param int $index The index to get the node from. If negative, starts at the end.
      *  @param mixed $default The default value to return if no node is found
      * 
-     *  @return mixed The node at the given index or the default value if no node is found
+     *  @return mixed|Node The node at the given index or the default value if no node is found
      */
-    public function get( $index, $default = null )
+    public function get( $index, $as_data = false, $default = null )
     {
         // reset the index if negative
         if ( $index < 0 ) {
@@ -279,24 +287,7 @@ class NList {
             $trav = $trav->$direction;
         }
 
-        return $trav;
-    }
-
-    /**
-     *  Get the data of a node at the given index.
-     * 
-     *  @param int $index The index of the node
-     * 
-     *  @return mixed The data of the node
-    */
-    public function getData( $index )
-    {
-        $node = $this->get( $index );
-        if ( $node instanceof Node ) {
-            return $node->data;
-        }
-
-        return $node;
+        return $as_data ? $trav->data : $trav;
     }
 
     /**
@@ -519,5 +510,93 @@ class NList {
         $index = $this->find( $data, false );
 
         return $index === -1 ? false : true;
+    }
+
+    /**
+     *  Jsonify the list.
+     * 
+     * @return string the JSON representation of the list
+     */
+    public function jsonify()
+    {
+        $nodes = [];
+        $trav = $this->head;
+
+        while ( $trav ) {
+            $nodes[] = $trav->toJSON();
+            $trav = $trav->next;
+        }
+
+        return '[' . implode( ', ', $nodes ) . ']';
+    }
+
+    /**
+     *  Shuffle the nodes in the list.
+     * 
+     *  Note: This method is a modifier because it changes the order of nodes in the list.
+     * 
+     *  @return NList the list of nodes shuffled.
+     */
+    public function shuffle()
+    {
+        $nodes = []; // an array to store the nodes' data
+        $trav = $this->head;
+
+        // traverse the list and add each node's data into the $nodes array
+        while ( $trav ) {
+            $nodes[] = $trav->data;
+            $trav = $trav->next;
+        }
+
+        // randomly shuffle the elements in the array
+        shuffle( $nodes );
+
+        // clear the nodes in the list
+        $this->clear();
+
+        // Rebuild list using shuffled array elements
+        foreach ( $nodes as $node ) {
+            $this->append( $node );
+        }
+
+        return $this;
+    }
+
+    /**
+     *  Copy the nodes from this list into a new list.
+     * 
+     *  @return NList the newly created list with a copy of the nodes in this list
+     */
+    public function copy()
+    {
+        return new NList( $this->toArray() );
+    }
+
+    /**
+     *  Join all the nodes' data with a separator string
+     * 
+     *  @param string $separator The separator string to join with
+     * 
+     *  @return string The string containing all the nodes' data separated by separator.
+     */
+    public function join( $separator = ' ' )
+    {
+        $result = '';
+        $trav = $this->head;
+
+        while ( $trav ) {
+            // json encode the data before concatenating
+            $result .= json_encode($trav->data);
+
+            // move to the next node
+            $trav = $trav->next;
+
+            // add the separator if trav is not null
+            if ( $trav ) {
+                $result .= $separator;
+            }
+        }
+
+        return $result;
     }
 }
