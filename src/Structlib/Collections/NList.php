@@ -16,7 +16,7 @@ class NList {
      *  @var int
      *  @access private
      */
-    private $length = 0;
+    public $length = 0;
 
     /**
      *  @var Node|null
@@ -36,6 +36,58 @@ class NList {
             // add the node to the list
             $this->append( $element );
         }
+    }
+
+    /**
+     *  Converts the nodes list into an array
+     * 
+     *  @return array an array representation of the nodes list
+     */
+    protected function toArray()
+    {
+        $items = [];
+
+        $trav = $this->head;
+        while ( $trav ) {
+            // add the node's data to the array
+            array_push( $items, $trav->data );
+
+            // move to the next node
+            $trav = $trav->next;
+        }
+
+        return $items;
+    }
+
+    public function __debugInfo()
+    {
+        return $this->toArray();
+    }
+
+    public function __toString()
+    {
+        // start the output
+        $output = "NList(\n";
+
+        $trav = $this->head;
+
+        while ( $trav ) {
+            $json_data = $trav->toJSON();
+
+            // add the node's json representation to the output
+            if ( $json_data !== false ) {
+                $output .= "\t{$trav->pos}: {$json_data}\n";
+            } else {
+                $output .= "\t{$trav->pos}: [COULD_NOT_BE_DISPLAYED]\n";
+            }
+
+            $trav = $trav->next;
+        }
+
+        // end the output
+        $output .= ")[{$this->length}]\n";
+
+        return $output;
     }
 
     /**
@@ -237,7 +289,7 @@ class NList {
      * 
      *  @return mixed The data of the node
     */
-    public function data( $index )
+    public function getData( $index )
     {
         $node = $this->get( $index );
         if ( $node instanceof Node ) {
@@ -255,7 +307,7 @@ class NList {
      * 
      *  @return int the index of the node with the given data, or -1 if data is not found
      */
-    public function index( $data, $strict = true )
+    public function find( $data, $strict = true )
     {
         if ( $data === null ) {
             return -1;
@@ -300,6 +352,172 @@ class NList {
             $this->head = null;
         }
 
+        // decrement the length of the list
+        $this->length--;
+
         return $last->data;
+    }
+
+    public function shift()
+    {
+        if ( $this->length == 0 ) {
+            return null;
+        }
+
+        // get the node at the start of the list
+        $first = $this->get(0);
+        // set the head of the list to its next node
+        $this->head = $this->head->next;
+
+        if ( $this->head ) {
+            $this->head->prev = null;
+        } else {
+            $this->tail = null;
+        }
+
+        // decrement the length of the list
+        $this->length--;
+
+        return $first->data;
+    }
+
+    /**
+     *  Check if the list is empty
+     * 
+     *  @return bool true if the list is empty, false otherwise
+     */
+    public function isEmpty()
+    {
+        return $this->length == 0;
+    }
+
+    /**
+     *  Remove the first node from the list that has the given data.
+     * 
+     *  @param string $data The data to search node by
+     * 
+     *  @return bool true if the node is removed successfully, false otherwise
+     */
+    public function remove( $data )
+    {
+        if ( $this->length == 0 || $data === null ) {
+            return false;
+        }
+
+        $trav = $this->head;
+
+        while ( $trav ) {
+            if ( $trav->data === $data ) {
+                // if it is the last node in the list
+                if ( ! $trav->next ) {
+                    $this->tail = $trav->prev;
+
+                    if ( $this->tail ) {
+                        $this->tail->next = null;
+                    }
+                }
+                
+                // if it is the first node in the list
+                if ( ! $trav->prev ) {
+                    $this->head = $trav->next;
+
+                    if ( $this->head ) {
+                        $this->head->prev = null;
+                    }
+                }
+
+                // if it is not the only node in the list
+                if ( $trav->next && $trav->prev ) {
+                    $trav->next->prev = $trav->prev;
+                    $trav->prev->next = $trav->next;
+                }
+
+                // decrement the length of the list
+                $this->length--;
+
+                return true;
+            }
+
+            $trav = $trav->next;
+        }
+
+        return false;
+    }
+
+    /**
+     *  Remove a node from the list at the given index.
+     * 
+     *  @param int $index The index of the node to remove
+     * 
+     *  @return bool true if the node was removed, false otherwise
+     */
+    public function removeAt( $index )
+    {
+        // get the node at the given index
+        $node = $this->get( $index );
+        if ( ! $node ) {
+            return false;
+        }
+
+        // the node is the head of the list if its prev pointer is null
+        if ( ! $node->prev ) {
+            $this->head = $node->next;
+
+            if ( $this->head ) {
+                $this->head->prev = null;
+            }
+        }
+
+        // the node is the tail of the list if its next pointer is null
+        if ( ! $node->next ) {
+            $this->tail = $node->prev;
+
+            if ( $this->tail ) {
+                $this->tail->next = null;
+            }
+        }
+
+        // if the node has next and prev pointers
+        if ( $node->next && $node->prev ) {
+            $node->next->prev = $node->prev;
+            $node->prev->next = $node->next;
+        }
+
+        // decrement the length of the list
+        $this->length--;
+
+        return true;
+    }
+
+    /**
+     *  Remove all nodes from the list.
+     * 
+     *  @return void
+     */
+    public function clear()
+    {
+        // set both head and tail pointers to null to remove all nodes from the list
+        $this->head = null;
+        $this->tail = null;
+
+        // set the length of the list to 0
+        $this->length = 0;
+    }
+
+    /**
+     *  Check if the list contains an element
+     * 
+     *  @param mixed $element The element to check for
+     * 
+     *  @return bool true if the list contains the element, false otherwise
+     */
+    public function contains( $element )
+    {
+        $data = $element instanceof Node ? $element->data : $element;
+
+        // get the index of the element if it exists
+        $index = $this->find( $data, false );
+
+        return $index === -1 ? false : true;
     }
 }

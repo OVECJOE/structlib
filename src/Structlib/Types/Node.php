@@ -153,18 +153,18 @@ class Node
     }
 
     /**
-     *  Serialize the node into a string
+     *  jsonify the node
      * 
-     *  @return string
+     *  @return string|bool the json string representation of the node, or false on failure
      */
-    public function serialize()
+    public function toJSON()
     {
-        return serialize([
+        return json_encode([
             'data' => $this->data,
             'size' => $this->size,
             'label' => $this->label,
             'pos' => $this->pos,
             'type' => $this->type,
-        ]);
+        ], JSON_FORCE_OBJECT);
     }
 }
