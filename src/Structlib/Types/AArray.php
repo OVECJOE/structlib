@@ -1,13 +1,13 @@
 <?php
+declare(strict_types=1);
+
+namespace Structlib\Types;
 
 /**
  *  @author OVECJOE <ovecjoe123@gmail.com>
  *  @file AArray.php: Implements an interface for associative arrays
- * 
- *  @declare(strict_types=1);
  */
 
-namespace Structlib\Types;
 use Structlib\Types\Base\BArray;
 
 class AArray extends BArray

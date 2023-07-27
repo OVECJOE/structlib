@@ -1,13 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+namespace Structlib\Collections;
+
 /**
  *  @author OVECJOE <ovecjoe123@gmail.com>
  *  @file NList.php: Implements a robust interface for LinkedList with some additional flavors.
- * 
- *  @declare(strict_types=1);
  */
-
-namespace Structlib\Collections;
 
 use Structlib\Types\Node;
 
@@ -800,9 +800,94 @@ class NList {
         $this->clear(); // Clear the existing list
 
         // Reconstruct the linked list from the sorted array
-        foreach ($elements as $element) {
-            $this->append($element);
+        foreach ( $elements as $element ) {
+            $this->append( $element );
         }
+
+        return $this;
+    }
+
+    /**
+     *  Converts the list into a JSON string of array of nodes.
+     * 
+     *  @return string the JSON representation of the list
+     */
+    public function toJSON()
+    {
+        $nodes = [];
+        $trav = $this->head;
+
+        while ( $trav ) {
+            $nodes[$trav->label] = json_decode( $trav->toJSON(), true );
+            $trav = $trav->next;
+        }
+
+        return json_encode( $nodes );
+    }
+
+    /**
+     *  Reverse the data order in the list, modifying the original list.
+     * 
+     *  This method is different from the reverse() method in that it does not reverse the nodes
+     *  in the list, only the data in the nodes.
+     * 
+     *  @param callable|null $callable Optional callback function to call on each data
+     * 
+     *  @return NList the reversed list of nodes.
+     */
+    public function flip( $callback = null )
+    {
+        $elements = $this->toArray();
+        $trav = $this->head;
+
+        // reverse the nodes in the current list.
+        while ( $trav ) {
+            $last_element = array_pop( $elements );
+
+            // call the callback function if it exists
+            if ( is_callable($callback) ) {
+                $last_element = $callback( $last_element );
+            }
+
+            // reverse the order of elements
+            $trav->setData( $last_element );
+            $trav = $trav->next;
+        }
+
+        return $this;
+    }
+
+    /**
+     *  Reverse the order of elements in the list, modifying the original list
+     * 
+     *  @return NList the reversed list of nodes.
+     */
+    public function reverse()
+    {
+        // list is empty or has one node only
+        if ( ! $this->head || $this->head === $this->tail ) {
+            return $this;
+        }
+
+        $current = $this->head;
+        $prev = null;
+
+        // reverse the links between the nodes
+        while ( $current ) {
+            // swap next and prev pointers for the current node
+            $next = $current->next;
+            $current->setNext( $prev );
+            $current->setPrev( $next );
+
+            // move to the next pointer in the original order
+            $prev = $current;
+            $current = $next;
+        }
+
+        // swap the head and tail pointers
+        $temp = $this->head;
+        $this->head = $this->tail;
+        $this->tail = $temp;
 
         return $this;
     }

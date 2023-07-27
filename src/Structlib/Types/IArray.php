@@ -1,13 +1,12 @@
 <?php
+declare(strict_types=1);
+
+namespace Structlib\Types;
 
 /**
  * @author OVECJOE <ovecjoe123@gmail.com>
  * @file IArray.php: Implements an interface for indexed arrays
- * 
- * @declare(strict_types=1);
  */
-
-namespace Structlib\Types;
 
 use Structlib\Types\Base\BArray;
 

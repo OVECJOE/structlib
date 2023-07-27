@@ -1,13 +1,12 @@
 <?php
+declare(strict_types=1);
+
+namespace Structlib\Helpers;
 
 /**
  * @author OVECJOE <ovecjoe123@gmail.com>
  * @file CodeAnalyser.php: Implements an interface for analysing classes and functions
- * 
- * @declare(strict_types=1);
  */
-
-namespace Structlib\Helpers;
 
 class CodeAnalyser
 {
@@ -322,7 +321,7 @@ class CodeAnalyser
             $fileContent = file( $fileName );
             
             // get function/method code
-            $code = array_slice( $fileContent, $lines[0] - 1, $lines[1] - $lines[0] + 1 );
+            $code = array_slice( $fileContent, $lines[0] - 1, (int)($lines[1] - $lines[0] + 1) );
             // convert $code to string
             $code = implode( "\n", $code );
 

@@ -1,13 +1,13 @@
 <?php
+declare(strict_types=1);
+
+
+namespace Structlib\Types\Base;
 
 /**
  * @author OVECJOE <ovecjoe123@gmail.com>
  * @file BArray.php: Implements an abstract class for arrays
- * 
- * @declare(strict_types=1);
  */
-
-namespace Structlib\Types\Base;
 
 class BArray implements \IteratorAggregate {
     /**
