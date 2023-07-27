@@ -6,10 +6,10 @@ namespace Structlib\Types\Base;
 
 /**
  * @author OVECJOE <ovecjoe123@gmail.com>
- * @file BArray.php: Implements an abstract class for arrays
+ * @file BaseArray.php: Implements a base class for future array classes.
  */
 
-class BArray implements \IteratorAggregate {
+class BaseArray implements \IteratorAggregate {
     /**
      *  @var array
      *  @access private

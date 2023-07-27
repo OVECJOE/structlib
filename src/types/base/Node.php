@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Structlib\Types;
+namespace Structlib\Types\Base;
 
 /**
  * @author OVECJOE <ovecjoe123@gmail.com>

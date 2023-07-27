@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace Structlib\Types;
+namespace Structlib\Types\Core;
 
 /**
  * @author OVECJOE <ovecjoe123@gmail.com>
- * @file IArray.php: Implements an interface for indexed arrays
+ * @file IndexedArray.php: Implements a wrapper around indexed arrays
  */
 
-use Structlib\Types\Base\BArray;
+use Structlib\Types\Base\BaseArray;
 
-class IArray extends BArray
+class IndexedArray extends BaseArray
 {
     public function __construct( $max_length, ...$items )
     {
@@ -175,7 +175,7 @@ class IArray extends BArray
         $unmerged_arrs = [];
 
         foreach ( $indexed_arrs as $arr ) {
-            if ( ! $arr instanceof IArray ) {
+            if ( ! $arr instanceof IndexedArray ) {
                 throw new \InvalidArgumentException( '$indexedArray must be an array of IndexedArray instances' );
             }
 

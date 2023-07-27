@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Structlib\Collections;
+namespace Structlib\Structures;
 
 /**
  *  @author OVECJOE <ovecjoe123@gmail.com>
- *  @file NList.php: Implements a robust interface for LinkedList with some additional flavors.
+ *  @file LinkedNodes.php: Implements a robust interface for LinkedList with some additional flavors.
  */
 
-use Structlib\Types\Node;
+use Structlib\Types\Base\Node;
 
-class NList {
+class LinkedNodes {
     /**
      *  @var int
      *  @access private
@@ -54,7 +54,7 @@ class NList {
     public function __toString()
     {
         // start the output
-        $output = "NList(\n";
+        $output = "LinkedNodes(\n";
 
         $trav = $this->head;
 
@@ -140,7 +140,7 @@ class NList {
      * 
      *  @param mixed $node
      * 
-     *  @return NList
+     *  @return LinkedNodes
      */
     public function append( $node )
     {
@@ -179,7 +179,7 @@ class NList {
      * 
      *  @param mixed $node
      * 
-     *  @return NList
+     *  @return LinkedNodes
      */
     public function prepend( $node )
     {
@@ -535,7 +535,7 @@ class NList {
      * 
      *  Note: This method is a modifier because it changes the order of nodes in the list.
      * 
-     *  @return NList the list of nodes shuffled.
+     *  @return LinkedNodes the list of nodes shuffled.
      */
     public function shuffle()
     {
@@ -565,11 +565,11 @@ class NList {
     /**
      *  Copy the nodes from this list into a new list.
      * 
-     *  @return NList the newly created list with a copy of the nodes in this list
+     *  @return LinkedNodes the newly created list with a copy of the nodes in this list
      */
     public function copy()
     {
-        return new NList( $this->toArray() );
+        return new LinkedNodes( $this->toArray() );
     }
 
     /**
@@ -605,13 +605,13 @@ class NList {
      * 
      *  @param callable $callback  callback function to execute on each node
      * 
-     *  @return NList a new list of nodes where each node has been mapped to the callback function.
+     *  @return LinkedNodes a new list of nodes where each node has been mapped to the callback function.
      *  
      *  If callback is not a function, returns the current list unchanged.
      */
     public function map( $callback )
     {
-        $new_list = new NList();
+        $new_list = new LinkedNodes();
 
         if ( ! is_callable( $callback ) ) {
             return $this;
@@ -627,17 +627,17 @@ class NList {
     }
 
     /**
-     *  Create a new NList containing only the elements that pass a certain test defined by
+     *  Create a new LinkedNodes containing only the elements that pass a certain test defined by
      *  the callback function.
      * 
      *  @param callable $callback
      * 
-     *  @return NList a new list containing only the nodes that pass a certain test defined,
+     *  @return LinkedNodes a new list containing only the nodes that pass a certain test defined,
      *  else empty list
      */
     public function filter( $callback )
     {
-        $new_list = new NList();
+        $new_list = new LinkedNodes();
 
         $trav = $this->head;
 
@@ -705,9 +705,9 @@ class NList {
     /**
      *  Extend the list with a given array of items (or list of nodes)
      * 
-     *  @param array|NList $elements List of nodes or array of items to extend the list with
+     *  @param array|LinkedNodes $elements List of nodes or array of items to extend the list with
      * 
-     *  @return NList the list extended.
+     *  @return LinkedNodes the list extended.
      */
     public function extend( $elements, $prepend = false )
     {
@@ -723,17 +723,17 @@ class NList {
     }
 
     /**
-     *  Create a new NList containing a portion of the original list,
+     *  Create a new LinkedNodes containing a portion of the original list,
      *  starting from the given index and with an optional specified length.
      * 
      *  @param int $start The starting index of the slice
      *  @param int $length The length of the new portion to slice
      * 
-     *  @return NList A new NList containing the sliced portion 
+     *  @return LinkedNodes A new LinkedNodes containing the sliced portion 
      */
     public function slice($start, $length = -1)
     {
-        $sliced_portion = new NList();
+        $sliced_portion = new LinkedNodes();
     
         // Get the node at the start position
         $node = $this->get( $start );
@@ -749,14 +749,14 @@ class NList {
     }
 
     /**
-     *  Create a new NList containing only the unique elements from the original list.
+     *  Create a new LinkedNodes containing only the unique elements from the original list.
      * 
-     *  @return NList A new NList containing only the unique elements.
+     *  @return LinkedNodes A new LinkedNodes containing only the unique elements.
      */
     public function unique()
     {
         $unique_elements = [];
-        $new_list = new NList();
+        $new_list = new LinkedNodes();
 
         foreach ( $this as $node ) {
             $data = $node->data;
@@ -777,7 +777,7 @@ class NList {
      *  @param callable|null $comparator=null Optional comparator function to use for sorting
      *  @param bool $desc=false whether to sort by descending or ascending
      * 
-     *  @return NList A current sorted list.
+     *  @return LinkedNodes A current sorted list.
      */
     public function sort( $comparator = null, $desc = false )
     {
@@ -833,7 +833,7 @@ class NList {
      * 
      *  @param callable|null $callable Optional callback function to call on each data
      * 
-     *  @return NList the reversed list of nodes.
+     *  @return LinkedNodes the reversed list of nodes.
      */
     public function flip( $callback = null )
     {
@@ -860,7 +860,7 @@ class NList {
     /**
      *  Reverse the order of elements in the list, modifying the original list
      * 
-     *  @return NList the reversed list of nodes.
+     *  @return LinkedNodes the reversed list of nodes.
      */
     public function reverse()
     {

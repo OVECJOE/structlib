@@ -7,9 +7,9 @@ declare(strict_types=1);
  */
 
 use PHPUnit\Framework\TestCase;
-use Structlib\Types\Node;
+use Structlib\Types\Base\Node;
 
 class NodeTest extends TestCase
 {
-    
+
 }

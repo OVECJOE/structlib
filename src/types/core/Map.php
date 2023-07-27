@@ -1,16 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace Structlib\Types;
+namespace Structlib\Types\Core;
 
 /**
  *  @author OVECJOE <ovecjoe123@gmail.com>
- *  @file AArray.php: Implements an interface for associative arrays
+ *  @file Map.php: Implements an interface for associative arrays
  */
 
-use Structlib\Types\Base\BArray;
+use Structlib\Types\Base\BaseArray;
 
-class AArray extends BArray
+class Map extends BaseArray
 {
     public function __construct( $items, $max_length = -1 )
     {
@@ -199,8 +199,8 @@ class AArray extends BArray
      */
     public function merge( $other_a_array )
     {
-        if ( ! $other_a_array instanceof AArray ) {
-            throw new \InvalidArgumentException( '$other_a_array must be an instance of the AArray class' );
+        if ( ! $other_a_array instanceof Map ) {
+            throw new \InvalidArgumentException( '$other_a_array must be an instance of the Map class' );
         }
 
         foreach ( $other_a_array as $key => $value ) {
@@ -249,11 +249,11 @@ class AArray extends BArray
     /**
      *  Clone the current array and return the copy.
      * 
-     *  @return AArray
+     *  @return Map
      */
     public function clone()
     {
-        return new AArray( $this->items, $this->max_length );
+        return new Map( $this->items, $this->max_length );
     }
 
     /**
