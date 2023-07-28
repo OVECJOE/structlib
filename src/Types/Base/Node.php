@@ -58,8 +58,8 @@ class Node
         $this->setType();
         $this->setSize();
 
-        // set label: Node[type]::uniqid()
-        $this->label = uniqid( get_class($this) . "[{$this->type}]::" );
+        // set label: {type}_{uniqid()}
+        $this->label = uniqid( "{$this->type}_" );
     }
 
     public function __get( $name ) {
@@ -149,7 +149,7 @@ class Node
      *  @return void
      */
     private function setSize() {
-        $this->size = is_array($this->data) ? count($this->data) : 1;
+        $this->size = is_countable($this->data) ? count($this->data) : 1;
     }
 
     /**

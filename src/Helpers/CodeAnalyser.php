@@ -77,7 +77,7 @@ class CodeAnalyser
      * 
      *  @return \ReflectionFunction|\ReflectionMethod|\ReflectionClass|null
      */
-    public function getActiveAnalyser(): mixed
+    public function getAnalyser(): mixed
     {
         foreach ( $this->analysers as $analyser ) {
             if ( $this->$analyser ) {
@@ -104,6 +104,32 @@ class CodeAnalyser
                 return $this->$analyser->$name;
             }
         }
+    }
+
+    /**
+     *  Get the number of required parameters
+     * 
+     *  @param string $methodName The name of the method if class analyser is active
+     * 
+     *  @return int The number of required parameters
+     */
+    public function getNumberOfRequiredParameters()
+    {
+        if ( $this->classAnalyser ) {
+            $class_constructor = $this->classAnalyser->getConstructor();
+
+            if ( $class_constructor ) {
+                return $class_constructor->getNumberOfRequiredParameters();
+            }
+        } else {
+            $result = $this->get( 'getNumberOfRequiredParameters' );
+    
+            if ( is_callable( $result ) ) {
+                return $result();
+            }
+        }
+
+        return -1;
     }
 
     /**
@@ -361,7 +387,7 @@ class CodeAnalyser
      */
     public function execute( array $args = [], object|null $instance, string $methodName = '' )
     {
-        $analyser = $this->getActiveAnalyser();
+        $analyser = $this->getAnalyser();
 
         if ( $analyser instanceof \ReflectionFunction ) {
             return $analyser->invokeArgs( $args );
