@@ -82,24 +82,17 @@ class NodeTest extends TestCase
         $this->assertNotEquals($this->node->label, $clonedNode->label);
     }
 
-    public function test_set_index_updates_position()
+    public function test_set_pos_updates_position()
     {
         $index = 10;
-        $this->node->setIndex($index);
+        $this->node->setPos($index);
         $this->assertEquals($index, $this->node->pos);
     }
 
     public function test_set_index_throws_exception_for_non_integer_index()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->node->setIndex('invalid_index');
-    }
-
-    public function test_set_index_throws_exception_for_modifying_existing_index()
-    {
-        $this->expectException(\BadMethodCallException::class);
-        $this->node->setIndex(5);
-        $this->node->setIndex(10);
+        $this->node->setPos('invalid_index');
     }
 
     public function test_set_next_updates_next_property()

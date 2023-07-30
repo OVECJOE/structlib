@@ -112,29 +112,29 @@ class LinkedNodes {
      *  - no_cycles: The number of traversals to perform
      *  - direction: the direction of the traversal (prev or next)
      */
-    private function _calTraversalPosition( $index )
+    private function _calTraversalPosition($index)
     {
         // get the midpoint of the list length
         $midpoint = floor($this->length / 2);
-
+    
         // get the starting node for traversal
         $trav = $index <= $midpoint ? $this->head : $this->tail;
+    
         // calculate the number of cycles needed to get to the node of insertion
-        $no_cycles = $index <= $midpoint ? $index : $this->length - $index;
-
+        $no_cycles = $index <= $midpoint ? $index : $this->length - $index - 1;
+    
+        // Determine the direction for traversal
+        $direction = $index <= $midpoint ? 'next' : 'prev';
+    
         return [
-            'trav' => $trav,
-            'no_cycles' => $no_cycles,
-            'direction' => $index <= $midpoint ? 'next' : 'prev',
+            $trav,
+            $no_cycles,
+            $direction,
         ];
-    }
+    }    
 
     /**
      *  Add an element to the end of the list.
-     *  
-     *  Note that this method always creates a new node from the element
-     *  data and the new position. If the element was a Node instance with
-     *  a valid next or prev node, this next or prev node will be lost.
      * 
      *  See the extend() method if you want to join two NodeList instances together.
      * 
@@ -144,10 +144,10 @@ class LinkedNodes {
      */
     public function append( $node )
     {
-        if ( ! $node instanceof Node ) {
-            $node = new Node( $node, $this->length );
+        if ( $node instanceof Node ) {
+            $node->setPos( $this->length );
         } else {
-            $node = new Node( $node->data, $this->length );
+            $node = new Node( $node, $this->length );
         }
 
         if ( ! $this->head ) {
@@ -171,10 +171,6 @@ class LinkedNodes {
     /**
      *  Add a node to the beginning of the list.
      * 
-     *  Note that this method always creates a new node from the element
-     *  data and the new position. If the element was a Node instance with
-     *  a valid next or prev node, this next or prev node will be lost.
-     * 
      *  See the extend() method if you want to join two NodeList instances together.
      * 
      *  @param mixed $node
@@ -183,10 +179,10 @@ class LinkedNodes {
      */
     public function prepend( $node )
     {
-        if ( ! $node instanceof Node ) {
-            $node = new Node( $node, 0 );
+        if ( $node instanceof Node ) {
+            $node->setPos(0);
         } else {
-            $node = new Node( $node->data, 0 );
+            $node = new Node( $node, 0 );
         }
 
         if ( ! $this->head ) {
@@ -215,42 +211,43 @@ class LinkedNodes {
      * 
      *  @return bool true if element was inserted successfully, false otherwise
      */
-    public function insert( $index, $element )
-    {
-        if ( $index >= $this->length || $index < 0 ) {
-            return false;
+    public function insert( $index, $element ) {
+        if ( $element instanceof Node ) {
+            $new_node = $element->setPos( $index );
+        } else {
+            $new_node = new Node( $element, $index );
         }
 
-        // if index is equal to last index of the list, insert element at the end,
-        // otherwise insert element at the beginning of the list if index = 0
-        if ( $index === $this->length - 1 ) {
-            $this->append( $element );
-        } else if ( $index === 0 ) {
-            $this->prepend( $element );
+        if ( $index === 0 ) {
+            // Insert at the beginning when the list is empty
+            $this->prepend( $new_node );
+        } else if ( $index === $this->length ) {
+            $this->append( $new_node );
         } else {
-            // extract calculated traversal info
             list( $trav, $no_cycles, $direction ) = $this->_calTraversalPosition( $index );
-    
-            // loop until the position where new node will be inserted
+
             for ( $i = 0; $i < $no_cycles; $i++ ) {
                 $trav = $trav->$direction;
             }
-
-            // create a new node
-            if ( $element instanceof Node ) {
-                $element = $element->data;
+            
+            if ( $trav ) {
+                // Insert in the middle of the list
+                $new_node->setPrev( $trav->prev );
+                $new_node->setNext( $trav );
+                
+                $trav->prev->setNext( $new_node );
+                $trav->setPrev( $new_node );
+            } else {
+               // Insert at the end when the index is beyond the list length
+               $new_node->setPrev( $this->tail );
+               $this->tail->setNext( $new_node );
+               $this->tail = $new_node;
             }
-            $node = new Node( $element, $index, $trav, $trav->next );
 
-            // update trav
-            $trav->next->prev = $node;
-            $trav->next = $node;
-
-            // increment length
             $this->length++;
         }
 
-        return true;
+        return $this->get( $index ) === $new_node;
     }
 
     /**
@@ -404,7 +401,7 @@ class LinkedNodes {
                     $this->tail = $trav->prev;
 
                     if ( $this->tail ) {
-                        $this->tail->next = null;
+                        $this->tail->setNext(null);
                     }
                 }
                 
@@ -413,14 +410,14 @@ class LinkedNodes {
                     $this->head = $trav->next;
 
                     if ( $this->head ) {
-                        $this->head->prev = null;
+                        $this->head->setPrev(null);
                     }
                 }
 
                 // if it is not the only node in the list
                 if ( $trav->next && $trav->prev ) {
-                    $trav->next->prev = $trav->prev;
-                    $trav->prev->next = $trav->next;
+                    $trav->next->setPrev( $trav->prev );
+                    $trav->prev->setNext( $trav->next );
                 }
 
                 // decrement the length of the list

@@ -77,19 +77,6 @@ class Node
         $this->pos = -1;
     }
 
-    public function setIndex( $index )
-    {
-        if ( gettype($index) !== 'integer' ) {
-            throw new \InvalidArgumentException('$index must be an integer');
-        }
-
-        if ( $this->pos && $this->pos !== -1 ) {
-            throw new \BadMethodCallException('Modifying this node index is not allowed');
-        }
-        
-        $this->pos = $index;
-    }
-
     /**
      *  Set the next node
      * 
@@ -97,8 +84,8 @@ class Node
      */
     public function setNext( $next )
     {
-        if ( ! $next instanceof Node ) {
-            throw new \InvalidArgumentException('$next must be a Node instance');
+        if ( ! $next instanceof Node && $next !== null ) {
+            throw new \InvalidArgumentException('$next must be null or a Node instance');
         }
 
         $this->next = $next;
@@ -111,8 +98,8 @@ class Node
      */
     public function setPrev( $prev )
     {
-        if ( ! $prev instanceof Node ) {
-            throw new \InvalidArgumentException('$prev must be a Node instance');
+        if ( ! $prev instanceof Node && $prev !== null ) {
+            throw new \InvalidArgumentException('$prev must be null or a Node instance');
         }
 
         $this->prev = $prev;
@@ -123,7 +110,8 @@ class Node
      * 
      *  @param mixed $data
      */
-    public function setData( $data ) {
+    public function setData( $data )
+    {
         if ( $data instanceof Node ) {
             throw new \InvalidArgumentException('$data cannot be a Node instance');
         }
@@ -135,11 +123,29 @@ class Node
     }
 
     /**
+     *  Sets the position of the node.
+     * 
+     *  @param int $position
+     * 
+     *  @return Node
+     */
+    public function setPos( $position )
+    {
+        if ( gettype( $position ) !== 'integer' ) {
+            throw new \InvalidArgumentException('Position must be an integer');
+        }
+
+        $this->pos = $position;
+        return $this;
+    }
+
+    /**
      *  Set the type of the node's data
      * 
      *  @return void
      */
-    private function setType() {
+    private function setType()
+    {
         $this->type = gettype($this->data);
     }
 
@@ -148,7 +154,8 @@ class Node
      * 
      *  @return void
      */
-    private function setSize() {
+    private function setSize()
+    {
         $this->size = is_countable($this->data) ? count($this->data) : 1;
     }
 

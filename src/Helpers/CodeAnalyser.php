@@ -89,21 +89,23 @@ class CodeAnalyser
     }
 
     /**
-     *  Get a method from the active analyser using the method name
+     *  Get the result of the method execution on the active analyser using the method name
      * 
      *  @param string $name
      * 
-     *  @return callable|null The method if found, or null otherwise
+     *  @return mixed The result of the method call, or null otherwise
      */
-    private function get( string $name )
+    private function get( string $name, ...$args )
     {
-        if ( ! $name ) return null;
-
-        foreach ( $this->analysers as $analyser ) {
-            if ( $this->$analyser && method_exists( $this->$analyser, $name ) ) {
-                return $this->$analyser->$name;
+        if ( $name ) {
+            $analyser = $this->getAnalyser();
+            
+            if ( is_object( $analyser ) && method_exists( $analyser, $name ) ) {
+                return $analyser->$name(...$args);
             }
         }
+
+        return null;
     }
 
     /**
@@ -122,10 +124,10 @@ class CodeAnalyser
                 return $class_constructor->getNumberOfRequiredParameters();
             }
         } else {
-            $result = $this->get( 'getNumberOfRequiredParameters' );
+            $result = $this->get('getNumberOfRequiredParameters');
     
-            if ( is_callable( $result ) ) {
-                return $result();
+            if ( ! is_null($result) ) {
+                return $result;
             }
         }
 
@@ -139,8 +141,7 @@ class CodeAnalyser
      */
     public function getName(): string
     {
-        $name = $this->get( 'getName' );
-        return is_callable( $name ) ? $name() : '';
+        return $this->get('getName') ?? '';
     }
 
     /**
@@ -152,8 +153,7 @@ class CodeAnalyser
      */
     public function getSName(): string
     {
-        $shortName = $this->get( 'getShortName' );
-        return is_callable( $shortName ) ? $shortName() : '';
+        return $this->get('getShortName') ?? '';
     }
 
     /**
@@ -164,8 +164,7 @@ class CodeAnalyser
      */
     public function getns(): string
     {
-        $ns_name = $this->get( 'getNamespaceName' );
-        return is_callable( $ns_name ) ? $ns_name() : '';
+        return $this->get('getNamespaceName') ?? '';
     }
 
     /**
@@ -185,8 +184,7 @@ class CodeAnalyser
      */
     public function isUserDefined(): bool
     {
-        $user_defined = $this->get( 'isUserDefined' );
-        return is_callable( $user_defined ) && $user_defined();
+        return (bool) $this->get('isUserDefined');
     }
 
     /**
@@ -196,8 +194,7 @@ class CodeAnalyser
      */
     public function isAnonymous(): bool
     {
-        $is_anonymous = $this->get( 'isAnonymous' );
-        return is_callable( $is_anonymous ) && $is_anonymous();
+        return (bool) $this->get('isAnonymous');
     }
 
     /**
@@ -207,8 +204,7 @@ class CodeAnalyser
      */
     public function getFilePath(): string
     {
-        $file_path = $this->get( 'getFileName' );
-        return is_callable( $file_path ) ? $file_path() : '';
+        return $this->get('getFileName') ?? '';
     }
 
     /**
@@ -218,11 +214,11 @@ class CodeAnalyser
      */
     public function getLines(): array
     {
-        $start_line = $this->get( 'getStartLine' );
-        $end_line = $this->get( 'getEndLine' );
+        $start_line = $this->get('getStartLine');
+        $end_line = $this->get('getEndLine');
 
-        if ( is_callable($start_line) && is_callable($end_line) ) {
-            return [ $start_line(), $end_line() ];
+        if ( $start_line && $end_line ) {
+            return [ $start_line, $end_line ];
         }
 
         return [];
@@ -235,8 +231,7 @@ class CodeAnalyser
      */
     public function isAbstract(): bool
     {
-        $is_abstract = $this->get( 'isAbstract' );
-        return is_callable( $is_abstract ) && $is_abstract();
+        return (bool) $this->get('isAbstract');
     }
 
     /**
@@ -246,8 +241,7 @@ class CodeAnalyser
      */
     public function isFinal(): bool
     {
-        $is_final = $this->get( 'isFinal' );
-        return is_callable( $is_final ) && $is_final();
+        return (bool) $this->get('isFinal');
     }
 
     /**
@@ -257,8 +251,7 @@ class CodeAnalyser
      */
     public function isDeprecated(): bool
     {
-        $is_deprecated = $this->get( 'isDeprecated' );
-        return is_callable( $is_deprecated ) && $is_deprecated();
+        return (bool) $this->get( 'isDeprecated' );
     }
 
     /**
@@ -272,7 +265,7 @@ class CodeAnalyser
             // get the parameters of the class constructor
             $params = $this->classAnalyser->getConstructor()->getParameters();
         } else {
-            $params = $this->get( 'getParameters' )();
+            $params = $this->get('getParameters') ?? [];
         }
 
         return array_map( function ( $param ) {
@@ -291,9 +284,9 @@ class CodeAnalyser
     public function getVisibility(): string
     {
         if ( ! $this->funcAnalyser ) {
-            if ( $this->get( 'isProtected' ) ) {
+            if ( $this->get('isProtected') ) {
                 return 'protected';
-            } else if ( $this->get( 'isPrivate' ) ) {
+            } else if ( $this->get('isPrivate') ) {
                 return 'private';
             }
         }
@@ -356,16 +349,16 @@ class CodeAnalyser
             
             // defaults to 1 signifying the function/method entry point
             $complexity = 1;
-
+            
             $decisionPoints = [
                 T_IF, T_ELSEIF, T_ELSE, T_SWITCH,
                 T_CASE, T_DEFAULT, T_WHILE, T_DO,
                 T_FOR, T_FOREACH, T_CATCH, T_BOOLEAN_AND,
                 T_BOOLEAN_OR
             ];
-
+            
             foreach ( $tokens as $token ) {
-                if ( is_array( $token ) && in_array( $token, $decisionPoints ) ) {
+                if ( is_array( $token ) && in_array( $token[0], $decisionPoints ) ) {
                     $complexity++;
                 }
             }
@@ -407,7 +400,7 @@ class CodeAnalyser
      *  @param string methodName method name to execute if class analyser is active
      *  @param array ...$args the arguments to pass to the function or method
      * 
-     *  @return float in milliseconds
+     *  @return float in seconds
      */
     public function getExecutionTime( $instance = null, $methodName = '', ...$args )
     {
