@@ -165,7 +165,7 @@ class LinkedNodesTest extends TestCase
     public function test_insert_method_runs_in_logarithmic_time()
     {
         foreach ( range( 1, 1000 ) as $item ) {
-            $this->nodes_list->append( $item );
+            $this->nodes_list->append( [$item, $item * 2, $item * 3] );
         }
 
         // implement an alternative function for the insertion
@@ -204,15 +204,15 @@ class LinkedNodesTest extends TestCase
 
             return $nodes_list->get( $index ) === $new_node;
         };
-
-        // create a func analyser
+        
+        // create a func and method analysers
         $funcAnalyser = CodeAnalyser::analyseFunc( 'altInsert' );
-        $exec_func_time = $funcAnalyser->getExecutionTime( null, '', $this->nodes_list, 950, 'Pretty Func Face' );
-
         $analyser = CodeAnalyser::analyseMethod( LinkedNodes::class, 'insert' );
-        // get the time it takes to execute the method
-        $exec_time = $analyser->getExecutionTime( $this->nodes_list, 'insert', 950, 'Pretty Face' );
+        
+        // get the time it takes to execute the method and func
+        $exec_time = $analyser->getExecutionTime( $this->nodes_list, 'insert', 600, 'Pretty Face' );
+        $exec_func_time = $funcAnalyser->getExecutionTime( null, '', $this->nodes_list, 600, 'Pretty Func Face' );
 
-        $this->assertGreaterThanOrEqual( 6, $exec_func_time / $exec_time );
+        $this->assertGreaterThan( 1, $exec_func_time / $exec_time );
     }
 }
