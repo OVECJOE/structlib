@@ -18,7 +18,7 @@ class LinkedNodesTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$code_analyser = CodeAnalyser::analyseClass(LinkedNodes::class);
+        self::$code_analyser = new CodeAnalyser( LinkedNodes::class );
     }
 
     public function setUp(): void
@@ -28,7 +28,7 @@ class LinkedNodesTest extends TestCase
 
     public function test_constructor_can_take_infinite_num_of_args()
     {
-        $analyser = self::$code_analyser->getAnalyser();
+        $analyser = self::$code_analyser->analyser;
         // check if constructor can take an infinite number of args
         $is_variadic = $analyser->getConstructor()->isVariadic();
 
@@ -187,15 +187,15 @@ class LinkedNodesTest extends TestCase
 
                 if ( $trav ) {
                     // Insert in the middle of the list
-                    $new_node->setPrev( $trav->prev );
-                    $new_node->setNext( $trav );
+                    $new_node->set_prev( $trav->prev );
+                    $new_node->set_next( $trav );
                     
-                    $trav->prev->setNext( $new_node );
-                    $trav->setPrev( $new_node );
+                    $trav->prev->set_next( $new_node );
+                    $trav->set_prev( $new_node );
                 } else {
                    // Insert at the end when the index is beyond the list length
-                   $new_node->setPrev( $nodes_list->tail );
-                   $nodes_list->tail->setNext( $new_node );
+                   $new_node->set_prev( $nodes_list->tail );
+                   $nodes_list->tail->set_next( $new_node );
                    $nodes_list->tail = $new_node;
                 }
 
@@ -206,12 +206,12 @@ class LinkedNodesTest extends TestCase
         };
         
         // create a func and method analysers
-        $funcAnalyser = CodeAnalyser::analyseFunc( 'altInsert' );
-        $analyser = CodeAnalyser::analyseMethod( LinkedNodes::class, 'insert' );
+        $funcAnalyser = new CodeAnalyser( '', '', 'altInsert' );
+        $analyser = new CodeAnalyser( LinkedNodes::class, 'insert' );
         
         // get the time it takes to execute the method and func
-        $exec_time = $analyser->getExecutionTime( $this->nodes_list, 'insert', 600, 'Pretty Face' );
-        $exec_func_time = $funcAnalyser->getExecutionTime( null, '', $this->nodes_list, 600, 'Pretty Func Face' );
+        $exec_time = $analyser->get_exec_time( $this->nodes_list, 'insert', 600, 'Pretty Face' );
+        $exec_func_time = $funcAnalyser->get_exec_time( null, '', $this->nodes_list, 600, 'Pretty Func Face' );
 
         $this->assertGreaterThan( 1, $exec_func_time / $exec_time );
     }

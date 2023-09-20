@@ -48,7 +48,7 @@ class LinkedNodes {
 
     public function __debugInfo()
     {
-        return $this->toArray();
+        return $this->to_array();
     }
 
     public function __toString()
@@ -59,7 +59,7 @@ class LinkedNodes {
         $trav = $this->head;
 
         while ( $trav ) {
-            $json_data = $trav->toJSON();
+            $json_data = $trav->to_json();
 
             // add the node's json representation to the output
             if ( $json_data !== false ) {
@@ -82,7 +82,7 @@ class LinkedNodes {
      * 
      *  @return array an array representation of the nodes list
      */
-    protected function toArray()
+    protected function to_array()
     {
         $items = [];
 
@@ -112,7 +112,7 @@ class LinkedNodes {
      *  - no_cycles: The number of traversals to perform
      *  - direction: the direction of the traversal (prev or next)
      */
-    private function _calTraversalPosition($index)
+    private function cal_trav_pos($index)
     {
         // get the midpoint of the list length
         $midpoint = floor($this->length / 2);
@@ -145,7 +145,7 @@ class LinkedNodes {
     public function append( $node )
     {
         if ( $node instanceof Node ) {
-            $node->setPos( $this->length );
+            $node->set_pos( $this->length );
         } else {
             $node = new Node( $node, $this->length );
         }
@@ -155,9 +155,9 @@ class LinkedNodes {
             $this->tail = $node;
         } else {
             // set the tail's next to the node
-            $this->tail->setNext( $node );
+            $this->tail->set_next( $node );
             // set the node's prev to the tail
-            $node->setPrev( $this->tail );
+            $node->set_prev( $this->tail );
             // set the list's tail to the node
             $this->tail = $node;
         }
@@ -180,7 +180,7 @@ class LinkedNodes {
     public function prepend( $node )
     {
         if ( $node instanceof Node ) {
-            $node->setPos(0);
+            $node->set_pos(0);
         } else {
             $node = new Node( $node, 0 );
         }
@@ -190,9 +190,9 @@ class LinkedNodes {
             $this->tail = $node;
         } else {
             // set the head's prev to the node
-            $this->head->setPrev( $node );
+            $this->head->set_prev( $node );
             // set the node's next to the head
-            $node->setNext( $this->head );
+            $node->set_next( $this->head );
             // set the head to the node
             $this->head = $node;
         }
@@ -213,7 +213,7 @@ class LinkedNodes {
      */
     public function insert( $index, $element ) {
         if ( $element instanceof Node ) {
-            $new_node = $element->setPos( $index );
+            $new_node = $element->set_pos( $index );
         } else {
             $new_node = new Node( $element, $index );
         }
@@ -224,7 +224,7 @@ class LinkedNodes {
         } else if ( $index === $this->length ) {
             $this->append( $new_node );
         } else {
-            list( $trav, $no_cycles, $direction ) = $this->_calTraversalPosition( $index );
+            list( $trav, $no_cycles, $direction ) = $this->cal_trav_pos( $index );
 
             for ( $i = 0; $i < $no_cycles; $i++ ) {
                 $trav = $trav->$direction;
@@ -232,15 +232,15 @@ class LinkedNodes {
             
             if ( $trav ) {
                 // Insert in the middle of the list
-                $new_node->setPrev( $trav->prev );
-                $new_node->setNext( $trav );
+                $new_node->set_prev( $trav->prev );
+                $new_node->set_next( $trav );
                 
-                $trav->prev->setNext( $new_node );
-                $trav->setPrev( $new_node );
+                $trav->prev->set_next( $new_node );
+                $trav->set_prev( $new_node );
             } else {
                // Insert at the end when the index is beyond the list length
-               $new_node->setPrev( $this->tail );
-               $this->tail->setNext( $new_node );
+               $new_node->set_prev( $this->tail );
+               $this->tail->set_next( $new_node );
                $this->tail = $new_node;
             }
 
@@ -277,7 +277,7 @@ class LinkedNodes {
         }
 
         // for any other value of the index, traverse the list to get the node at the index
-        list( $trav, $no_cycles, $direction ) = $this->_calTraversalPosition( $index );
+        list( $trav, $no_cycles, $direction ) = $this->cal_trav_pos( $index );
         
         // traverse the list until the given index is reached
         for ( $i = 0; $i < $no_cycles; $i++ ) {
@@ -401,7 +401,7 @@ class LinkedNodes {
                     $this->tail = $trav->prev;
 
                     if ( $this->tail ) {
-                        $this->tail->setNext(null);
+                        $this->tail->set_next(null);
                     }
                 }
                 
@@ -410,14 +410,14 @@ class LinkedNodes {
                     $this->head = $trav->next;
 
                     if ( $this->head ) {
-                        $this->head->setPrev(null);
+                        $this->head->set_prev(null);
                     }
                 }
 
                 // if it is not the only node in the list
                 if ( $trav->next && $trav->prev ) {
-                    $trav->next->setPrev( $trav->prev );
-                    $trav->prev->setNext( $trav->next );
+                    $trav->next->set_prev( $trav->prev );
+                    $trav->prev->set_next( $trav->next );
                 }
 
                 // decrement the length of the list
@@ -439,7 +439,7 @@ class LinkedNodes {
      * 
      *  @return bool true if the node was removed, false otherwise
      */
-    public function removeAt( $index )
+    public function remove_at( $index )
     {
         // get the node at the given index
         $node = $this->get( $index );
@@ -520,7 +520,7 @@ class LinkedNodes {
         $trav = $this->head;
 
         while ( $trav ) {
-            $nodes[] = $trav->toJSON();
+            $nodes[] = $trav->to_json();
             $trav = $trav->next;
         }
 
@@ -566,7 +566,7 @@ class LinkedNodes {
      */
     public function copy()
     {
-        return new LinkedNodes( $this->toArray() );
+        return new LinkedNodes( $this->to_array() );
     }
 
     /**
@@ -779,7 +779,7 @@ class LinkedNodes {
     public function sort( $comparator = null, $desc = false )
     {
         // convert the list into a regular array for sorting
-        $elements = $this->toArray();
+        $elements = $this->to_array();
 
         // Sort the array using the specified comparator or the default
         if ( is_callable( $comparator ) ) {
@@ -809,13 +809,13 @@ class LinkedNodes {
      * 
      *  @return string the JSON representation of the list
      */
-    public function toJSON()
+    public function to_json()
     {
         $nodes = [];
         $trav = $this->head;
 
         while ( $trav ) {
-            $nodes[$trav->label] = json_decode( $trav->toJSON(), true );
+            $nodes[$trav->label] = json_decode( $trav->to_json(), true );
             $trav = $trav->next;
         }
 
@@ -834,7 +834,7 @@ class LinkedNodes {
      */
     public function flip( $callback = null )
     {
-        $elements = $this->toArray();
+        $elements = $this->to_array();
         $trav = $this->head;
 
         // reverse the nodes in the current list.
@@ -847,7 +847,7 @@ class LinkedNodes {
             }
 
             // reverse the order of elements
-            $trav->setData( $last_element );
+            $trav->set_data( $last_element );
             $trav = $trav->next;
         }
 
@@ -873,8 +873,8 @@ class LinkedNodes {
         while ( $current ) {
             // swap next and prev pointers for the current node
             $next = $current->next;
-            $current->setNext( $prev );
-            $current->setPrev( $next );
+            $current->set_next( $prev );
+            $current->set_prev( $next );
 
             // move to the next pointer in the original order
             $prev = $current;

@@ -61,7 +61,7 @@ class BaseArray implements \IteratorAggregate {
      * 
      *  @return bool true if an array is associative, false otherwise
      */
-    public static function isAssociative( $arr )
+    public static function is_map( $arr )
     {
         if ( empty($arr) && ! is_array($arr) ) {
             return false;
@@ -94,7 +94,7 @@ class BaseArray implements \IteratorAggregate {
      * 
      *  @return bool True if the array is empty, false otherwise
      */
-    public function isEmpty()
+    public function is_empty()
     {
         return $this->length === 0;
     }
@@ -104,7 +104,7 @@ class BaseArray implements \IteratorAggregate {
      * 
      *  @return bool True if the array is full, false otherwise
      */
-    public function isFull()
+    public function is_full()
     {
         return $this->length === $this->max_length;
     }

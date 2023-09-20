@@ -55,8 +55,8 @@ class Node
         $this->pos = $pos;
 
         // set the type and size of the node
-        $this->setType();
-        $this->setSize();
+        $this->set_type();
+        $this->set_size();
 
         // set label: {type}_{uniqid()}
         $this->label = uniqid( "{$this->type}_" );
@@ -82,7 +82,7 @@ class Node
      * 
      *  @param Node|null $next
      */
-    public function setNext( $next )
+    public function set_next( $next )
     {
         if ( ! $next instanceof Node && $next !== null ) {
             throw new \InvalidArgumentException('$next must be null or a Node instance');
@@ -96,7 +96,7 @@ class Node
      * 
      *  @param Node|null $prev
      */
-    public function setPrev( $prev )
+    public function set_prev( $prev )
     {
         if ( ! $prev instanceof Node && $prev !== null ) {
             throw new \InvalidArgumentException('$prev must be null or a Node instance');
@@ -110,7 +110,7 @@ class Node
      * 
      *  @param mixed $data
      */
-    public function setData( $data )
+    public function set_data( $data )
     {
         if ( $data instanceof Node ) {
             throw new \InvalidArgumentException('$data cannot be a Node instance');
@@ -118,8 +118,8 @@ class Node
 
         $this->data = $data;
         // set the new data type and size
-        $this->setType();
-        $this->setSize();
+        $this->set_type();
+        $this->set_size();
     }
 
     /**
@@ -129,7 +129,7 @@ class Node
      * 
      *  @return Node
      */
-    public function setPos( $position )
+    public function set_pos( $position )
     {
         if ( gettype( $position ) !== 'integer' ) {
             throw new \InvalidArgumentException('Position must be an integer');
@@ -144,7 +144,7 @@ class Node
      * 
      *  @return void
      */
-    private function setType()
+    private function set_type()
     {
         $this->type = gettype($this->data);
     }
@@ -154,7 +154,7 @@ class Node
      * 
      *  @return void
      */
-    private function setSize()
+    private function set_size()
     {
         $this->size = is_countable($this->data) ? count($this->data) : 1;
     }
@@ -164,7 +164,7 @@ class Node
      * 
      *  @return string|bool the json string representation of the node, or false on failure
      */
-    public function toJSON()
+    public function to_json()
     {
         return json_encode([
             'data' => $this->data,

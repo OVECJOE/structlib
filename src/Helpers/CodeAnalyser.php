@@ -10,98 +10,65 @@ namespace Structlib\Helpers;
 
 class CodeAnalyser
 {
+    const VERSION = '1.0.1';
 
-    private $funcAnalyser;
-    private $classAnalyser;
-    private $methodAnalyser;
-
-    private $analysers = [ 'funcAnalyser', 'classAnalyser', 'methodAnalyser' ];
-    private $currentER; // most current execution result
-
-    private function __construct() {}
-
-    /**
-     *  Create a new CodeAnalyser instance for the given class
-     * 
-     *  @param string $className The name of the class
-     * 
-     *  @static
-     * 
-     *  @return CodeAnalyser instance for the class
-     */
-    public static function analyseClass( string $className ): CodeAnalyser
-    {
-        $analyser = new self();
-        $analyser->classAnalyser = new \ReflectionClass( $className );
-        
-        return $analyser;
-    }
+    const FLAGS = [
+        'FUNC' => 1,
+        'CLASS' => 1,
+        'METHOD' => 2
+    ];
+    public $analyser;
+    private $last_execution_result; // most current execution result
 
     /**
-     *  Create a new CodeAnalyser instance for the given method
+     *  Create a new CodeAnalyser instance for the given class, method, or function
      * 
-     *  @param string $className The name of the class
-     *  @param string $methodName The name of the method
+     *  @param string $class_name The name of the class (to analyse if no other arguments are provided)
+     *  @param string $method_name The name of the method (to analyse if class name is provided)
+     *  @param string $function_name The name of the function (to analyse if no other arguments are provided)
      * 
-     *  @static
+     *  @throws \InvalidArgumentException if none of the arguments are provided
      * 
-     *  @return CodeAnalyser instance for the given method
+     *  @return void
      */
-    public static function analyseMethod( string $className, string $methodName ): CodeAnalyser
-    {
-        $analyser = new self();
-        $analyser->methodAnalyser = new \ReflectionMethod( $className, $methodName );
+    public function __construct( string $class_name = '', string $method_name = '', string $function_name = '' ) {
+        // check if it is a class or method that is being analysed
+        $flag = (strlen( $class_name ) > 0) + (strlen( $method_name ) > 0);
 
-        return $analyser;
-    }
+        switch ( $flag ) {
+            case self::FLAGS['CLASS']:
+                $this->analyser = new \ReflectionClass( $class_name );
+                break;
+            case self::FLAGS['METHOD']:
+                $this->analyser = new \ReflectionMethod( $class_name, $method_name );
+                break;
+            default:
+                $flag = $flag + (strlen( $function_name ) > 0);
 
-    /**
-     *  Create a new CodeAnalyser instance for the given function
-     * 
-     *  @param string $functionName The name of the function
-     * 
-     *  @static
-     * 
-     *  @return CodeAnalyser instance for the function
-     */
-    public static function analyseFunc( string $functionName ): CodeAnalyser
-    {
-        $analyser = new self();
-        $analyser->funcAnalyser = new \ReflectionFunction( $functionName );
+                // check if it is a function that is being analysed
+                if ( $flag === self::FLAGS['FUNC'] ) {
+                    $this->analyser = new \ReflectionFunction( $function_name );
+                } else {
+                    throw new \InvalidArgumentException('Invalid arguments');
+                }
 
-        return $analyser;
-    }
-
-    /**
-     *  Get the active analyser.
-     * 
-     *  @return \ReflectionFunction|\ReflectionMethod|\ReflectionClass|null
-     */
-    public function getAnalyser(): mixed
-    {
-        foreach ( $this->analysers as $analyser ) {
-            if ( $this->$analyser ) {
-                return $this->$analyser;
-            }
+                break;
         }
-
-        return null;
     }
 
     /**
      *  Get the result of the method execution on the active analyser using the method name
      * 
-     *  @param string $name
+     *  @param string $name The name of the method to call
+     *  @param array $args The arguments to pass to the method call
      * 
      *  @return mixed The result of the method call, or null otherwise
      */
     private function get( string $name, ...$args )
     {
         if ( $name ) {
-            $analyser = $this->getAnalyser();
-            
-            if ( is_object( $analyser ) && method_exists( $analyser, $name ) ) {
-                return $analyser->$name(...$args);
+            if ( is_object( $this->analyser ) && method_exists( $this->analyser, $name ) ) {
+                return $this->analyser->$name(...$args);
             }
         }
 
@@ -109,16 +76,14 @@ class CodeAnalyser
     }
 
     /**
-     *  Get the number of required parameters
+     *  Get the number of required parameters for a class constructor, method, or function
      * 
-     *  @param string $methodName The name of the method if class analyser is active
-     * 
-     *  @return int The number of required parameters
+     *  @return int The number of required parameters or -1 if the analyser is not available
      */
-    public function getNumberOfRequiredParameters()
+    public function get_required_params_count()
     {
-        if ( $this->classAnalyser ) {
-            $class_constructor = $this->classAnalyser->getConstructor();
+        if ( $this->analyser instanceof \ReflectionClass ) {
+            $class_constructor = $this->analyser->getConstructor();
 
             if ( $class_constructor ) {
                 return $class_constructor->getNumberOfRequiredParameters();
@@ -137,9 +102,9 @@ class CodeAnalyser
     /**
      *  Get the name of the class, method, or function depending on the active analyser
      * 
-     *  @return string The name of the class, method, or function.
+     *  @return string The name of the class, method, function, or empty string if the name is not found
      */
-    public function getName(): string
+    public function get_name(): string
     {
         return $this->get('getName') ?? '';
     }
@@ -151,30 +116,37 @@ class CodeAnalyser
      *  @return string The short name of the class, method, or function,
      *  which is the name without the namespace
      */
-    public function getSName(): string
+    public function get_shortname(): string
     {
         return $this->get('getShortName') ?? '';
     }
 
     /**
-     *  Get the namespace name of the class, method, or function depending
-     *  on the active analyser.
+     *  Get the namespace name of the class, method, or function being analysed.
      * 
      *  @return string The namespace name of the class, method, or function.
      */
-    public function getns(): string
+    public function get_ns_name(): string
     {
         return $this->get('getNamespaceName') ?? '';
     }
 
     /**
-     *  Check if the class, method, or function is globally defined.
+     *  Check if the class or function is globally defined.
      * 
-     *  @return bool True if the class, method, or function is globally defined, false otherwise.
+     *  @return bool True if the class or function is globally defined, false otherwise.
      */
-    public function isGlobal(): bool
+    public function is_global(): bool
     {
-        return function_exists( '\\' . $this->getSName() );
+        if ( $this->analyser instanceof \ReflectionClass ) {
+            return class_exists( '\\' . $this->get_shortname() );
+        }
+
+        if ( $this->analyser instanceof \ReflectionFunction ) {
+            return function_exists( '\\' . $this->get_shortname() );
+        }
+
+        return false;
     }
 
     /**
@@ -182,17 +154,17 @@ class CodeAnalyser
      * 
      *  @return bool True if the class, method, or function is user defined, false otherwise.
      */
-    public function isUserDefined(): bool
+    public function is_user_defined(): bool
     {
         return (bool) $this->get('isUserDefined');
     }
 
     /**
-     *  Check if the function is an anonymous function if funcAnalyser is active.
+     *  Check that the function is anonymous if analyser is a function
      * 
      *  @return bool true if the function is anonymous, false otherwise.
      */
-    public function isAnonymous(): bool
+    public function is_anonymous(): bool
     {
         return (bool) $this->get('isAnonymous');
     }
@@ -202,17 +174,18 @@ class CodeAnalyser
      * 
      *  @return string the absolute path to the file containing the function, method, or class
      */
-    public function getFilePath(): string
+    public function get_file_path(): string
     {
         return $this->get('getFileName') ?? '';
     }
 
     /**
-     *  Get the start and end line of the function, method, or class from the file.
+     *  Get the start and end line of the snippet of the function, method, or
+     *  class implementation from its file.
      * 
      *  @return array [start, end] if both exists, else empty array
      */
-    public function getLines(): array
+    public function get_lines(): array
     {
         $start_line = $this->get('getStartLine');
         $end_line = $this->get('getEndLine');
@@ -229,7 +202,7 @@ class CodeAnalyser
      * 
      *  @return bool true if the function, method, or class is abtract, false otherwise
      */
-    public function isAbstract(): bool
+    public function is_abstract(): bool
     {
         return (bool) $this->get('isAbstract');
     }
@@ -239,7 +212,7 @@ class CodeAnalyser
      * 
      *  @return bool true if the function, method, or class is final, false otherwise
      */
-    public function isFinal(): bool
+    public function is_final(): bool
     {
         return (bool) $this->get('isFinal');
     }
@@ -249,7 +222,7 @@ class CodeAnalyser
      * 
      *  @return bool true if the function or method is deprecated, false otherwise
      */
-    public function isDeprecated(): bool
+    public function is_deprecated(): bool
     {
         return (bool) $this->get( 'isDeprecated' );
     }
@@ -257,13 +230,12 @@ class CodeAnalyser
     /**
      *  Get information about the parameters of the function, method, or class constructor
      * 
-     *  @return array[] An array of associative arrays of parameters information
+     *  @return array[] An array containing an associative array of parameters information.
      */
-    public function getParamsInfo(): array
+    public function get_params_metadata(): array
     {
-        if ( $this->classAnalyser ) {
-            // get the parameters of the class constructor
-            $params = $this->classAnalyser->getConstructor()->getParameters();
+        if ( $this->analyser instanceof \ReflectionClass ) {
+            $params = $this->analyser->getConstructor()->getParameters();
         } else {
             $params = $this->get('getParameters') ?? [];
         }
@@ -280,10 +252,12 @@ class CodeAnalyser
 
     /**
      *  Get the visibility of a function, method, or class.
+     * 
+     *  @return string the visibility of the function, method, or class
      */
-    public function getVisibility(): string
+    public function get_visibility(): string
     {
-        if ( ! $this->funcAnalyser ) {
+        if ( ! $this->analyser instanceof \ReflectionFunction ) {
             if ( $this->get('isProtected') ) {
                 return 'protected';
             } else if ( $this->get('isPrivate') ) {
@@ -299,10 +273,10 @@ class CodeAnalyser
      * 
      *  @return array|null traits used by a class, or null if no traits
      */
-    public function getTraits(): array|null
+    public function get_traits(): array|null
     {
-        if ( $this->classAnalyser ) {
-            $traits = $this->classAnalyser->getTraits();
+        if ( $this->analyser instanceof \ReflectionClass ) {
+            $traits = $this->analyser->getTraits();
 
             return array_map(function ($trait) {
                 return [
@@ -326,26 +300,32 @@ class CodeAnalyser
      *  (branches) in the code, such as if statements, loops (for, while, do-while),
      *  switch statements, and logical operators (&&, ||, ? :).
      * 
-     *  @param int cyclomatic complexity of the method or function.
+     *  @throws \Exception if there is an error while calculating the cyclomatic complexity
+     * 
+     *  @param int the cyclomatic complexity or -1 if not successful
      */
-    public function calculateCComp(): int
+    public function cal_cyclomatic_comp(): int
     {
         // get the number of lines of code
-        $lines = $this->getLines();
+        $lines = $this->get_lines();
 
         if ( ! empty( $lines ) ) {
             // get file name
-            $fileName = $this->getFilePath();
+            $fileName = $this->get_file_path();
             // get the content of the file
-            $fileContent = file( $fileName );
-            
+            $fileContent = file( $fileName, FILE_IGNORE_NEW_LINES );
+
+            if ( ! $fileContent ) {
+                throw new \Exception("Error reading file: $fileName");
+            }
+
             // get function/method code
             $code = array_slice( $fileContent, $lines[0] - 1, (int)($lines[1] - $lines[0] + 1) );
             // convert $code to string
             $code = implode( "\n", $code );
 
             // tokenize the code
-            $tokens = token_get_all( "<?php\n" . $code . "\n" );
+            $tokens = token_get_all( "<?php\n" . $code . "\n", TOKEN_PARSE );
             
             // defaults to 1 signifying the function/method entry point
             $complexity = 1;
@@ -370,27 +350,41 @@ class CodeAnalyser
     }
 
     /** 
-     *  Execute the function, method, and class
+     *  Execute a method of the class, the function, or the method for a given instance
      * 
      *  @param array $args the arguments to be passed to the function/method
-     *  @param object|null $instance the class instance if analyser is available for method or class
+     *  @param object|null $instance a class instance if a method analyser.
      *  @param string $methodName the name of the method if analyser is available for class
      * 
      *  @return mixed the result of the execution of the function/method call
      */
     public function execute( array $args = [], object|null $instance, string $methodName = '' )
     {
-        $analyser = $this->getAnalyser();
-
-        if ( $analyser instanceof \ReflectionFunction ) {
-            return $analyser->invokeArgs( $args );
-        } else if ( $analyser instanceof \ReflectionMethod ) {
-            return $analyser->invokeArgs( $instance, $args );
-        } else if ( $analyser instanceof \ReflectionClass ) {
-            if ( method_exists( $instance, $methodName ) ) {
-                return $instance->$methodName( $args );
-            }
+        if ( gettype( $args ) !== 'array' ) {
+            throw new \InvalidArgumentException('Invalid argument type');
         }
+
+        if ( $this->analyser instanceof \ReflectionClass ) {
+            if ( ! $instance ) {
+                throw new \InvalidArgumentException('Instance cannot be null');
+            }
+
+            if ( ! method_exists( $instance, $methodName ) ) {
+                throw new \InvalidArgumentException("Method '$methodName' does not exist");
+            }
+
+            return $instance->$methodName( ...$args );
+        } else if ( $this->analyser instanceof \ReflectionMethod ) {
+            if ( ! $instance ) {
+                throw new \InvalidArgumentException('Instance cannot be null');
+            }
+
+            return $this->analyser->invoke( $instance, ...$args );
+        } else if ( $this->analyser instanceof \ReflectionFunction ) {
+            return $this->analyser->invoke( ...$args );
+        }
+
+        return null;
     }
 
     /**
@@ -402,13 +396,13 @@ class CodeAnalyser
      * 
      *  @return float in seconds
      */
-    public function getExecutionTime( $instance = null, $methodName = '', ...$args )
+    public function get_exec_time( $instance = null, $methodName = '', ...$args )
     {
         // record the time before execution
         $startTime = microtime( true );
 
         // execute the function, method, or class
-        $this->currentER = $this->execute( $args, $instance, $methodName );
+        $this->last_execution_result = $this->execute( $args, $instance, $methodName );
 
         // record the time after execution
         $endTime = microtime( true );
@@ -425,13 +419,13 @@ class CodeAnalyser
      * 
      *  @return int memory used in bytes
      */
-    public function getMemoryUsage( $instance = null, $methodName = '', ...$args )
+    public function get_memory_usage( $instance = null, $methodName = '', ...$args )
     {
         // backup the current memory usage
         $initialUsage = memory_get_usage();
 
         // execute the function, method, or class
-        $this->currentER = $this->execute( $args, $instance, $methodName );
+        $this->last_execution_result = $this->execute( $args, $instance, $methodName );
 
         // get the memory usage after execution
         $finalUsage = memory_get_usage();

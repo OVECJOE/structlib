@@ -18,7 +18,7 @@ class NodeTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        self::$code_analyser = CodeAnalyser::analyseClass(Node::class);
+        self::$code_analyser = new CodeAnalyser(Node::class);
     }
 
     protected function setUp(): void
@@ -28,13 +28,13 @@ class NodeTest extends TestCase
 
     public function test_node_can_initialize_with_two_args()
     {
-        $no_required_args = self::$code_analyser->getNumberOfRequiredParameters();
+        $no_required_args = self::$code_analyser->get_required_params_count();
         $this->assertEquals(2, $no_required_args);
     }
 
     public function test_node_constructor_can_take_up_to_four_args()
     {
-        $analyser = self::$code_analyser->getAnalyser();
+        $analyser = self::$code_analyser->analyser;
         $no_args = $analyser->getConstructor()->getNumberOfParameters();
         $this->assertEquals(4, $no_args);
     }
@@ -50,7 +50,7 @@ class NodeTest extends TestCase
 
     public function test_can_set_node_data_via_public_method()
     {
-        $this->node->setData([]);
+        $this->node->set_data([]);
         $this->assertIsArray($this->node->data);
     }
 
@@ -58,7 +58,7 @@ class NodeTest extends TestCase
     {
         $type = $this->node->type;
         $size = $this->node->size;
-        $this->node->setData(['Pretty', 'Face']);
+        $this->node->set_data(['Pretty', 'Face']);
         $this->assertNotEquals($type, $this->node->type);
         $this->assertNotEquals($size, $this->node->size);
     }
@@ -85,51 +85,51 @@ class NodeTest extends TestCase
     public function test_set_pos_updates_position()
     {
         $index = 10;
-        $this->node->setPos($index);
+        $this->node->set_pos($index);
         $this->assertEquals($index, $this->node->pos);
     }
 
     public function test_set_index_throws_exception_for_non_integer_index()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->node->setPos('invalid_index');
+        $this->node->set_pos('invalid_index');
     }
 
     public function test_set_next_updates_next_property()
     {
         $nextNode = new Node('Next Node', 1);
-        $this->node->setNext($nextNode);
+        $this->node->set_next($nextNode);
         $this->assertSame($nextNode, $this->node->next);
     }
 
     public function test_set_next_throws_exception_for_non_node_argument()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->node->setNext('invalid_next_node');
+        $this->node->set_next('invalid_next_node');
     }
 
     public function test_set_prev_updates_prev_property()
     {
         $prevNode = new Node('Previous Node', -1);
-        $this->node->setPrev($prevNode);
+        $this->node->set_prev($prevNode);
         $this->assertSame($prevNode, $this->node->prev);
     }
 
     public function test_set_prev_throws_exception_for_non_node_argument()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->node->setPrev('invalid_prev_node');
+        $this->node->set_prev('invalid_prev_node');
     }
 
     public function test_to_json_returns_valid_json_string()
     {
-        $jsonString = $this->node->toJSON();
+        $jsonString = $this->node->to_json();
         $this->assertJson($jsonString);
     }
 
     public function test_json_representation_contains_all_properties()
     {
-        $jsonString = $this->node->toJSON();
+        $jsonString = $this->node->to_json();
         $data = json_decode($jsonString, true);
         $this->assertArrayHasKey('data', $data);
         $this->assertArrayHasKey('type', $data);
@@ -143,7 +143,7 @@ class NodeTest extends TestCase
         $label = $this->node->label;
         $expectedJson = '{"data":"Pretty Face","size":1,"label":"' . $label . '","pos":0,"type":"string"}';
 
-        $this->assertEqualsIgnoringCase($expectedJson, $this->node->toJSON());
+        $this->assertEqualsIgnoringCase($expectedJson, $this->node->to_json());
     }
 
     public function test_invalid_data_type_in_constructor_throws_exception()
@@ -155,7 +155,7 @@ class NodeTest extends TestCase
     public function test_invalid_data_type_in_set_data_throws_exception()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->node->setData( new Node(-1, 0) );
+        $this->node->set_data( new Node(-1, 0) );
     }
 
     public function test_out_of_bound_property_throws_exception()

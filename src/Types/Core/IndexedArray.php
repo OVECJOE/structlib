@@ -39,7 +39,7 @@ class IndexedArray extends BaseArray
      */
     public function push( $item )
     {
-        if ( $this->isFull() ) {
+        if ( $this->is_full() ) {
             return false;
         }
 
@@ -58,7 +58,7 @@ class IndexedArray extends BaseArray
      */
     public function unshift( $item )
     {
-        if ( $this->isFull() ) {
+        if ( $this->is_full() ) {
             return false;
         }
 
@@ -150,7 +150,7 @@ class IndexedArray extends BaseArray
      */
     public function extend( $other_arr )
     {
-        if ( $this->isAssociative( $other_arr ) ) {
+        if ( $this->is_map( $other_arr ) ) {
             throw new \InvalidArgumentException( '$other_arr must be an indexed array' );
         }
 
@@ -374,7 +374,7 @@ class IndexedArray extends BaseArray
      * 
      *  @return array an associative array
      */
-    public function toAArray( $depth = -1 )
+    public function to_map( $depth = -1 )
     {
         $a_array = [];
         $stack = [ [$this->items, &$a_array] ];
